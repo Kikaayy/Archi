@@ -1,0 +1,90 @@
+    .pos 0
+    init:   irmovl Stack, %esp     # Initialize stack pointer
+            irmovl Stack, %ebp     # Initialize base pointer
+            call main              # Call main function
+            halt
+
+# Function: strncpy
+# Parameters:
+#   %eax: destination array address
+#   %ebx: source array address
+#   %ecx: maximum number of words to copy
+# Returns:
+#   %eax: destination array address
+strncpy:
+            pushl %ebp            # Save base pointer
+            rrmovl %esp, %ebp     # Set new base pointer
+            pushl %esi            # Save registers
+            pushl %edi
+            pushl %ebx
+            
+            rrmovl %eax, %edi     # %edi = destination
+            rrmovl %ebx, %esi     # %esi = source
+            
+    copy_loop:
+            mrmovl (%esi), %eax   # Load word from source
+            rmmovl %eax, (%edi)   # Store word to destination
+            andl %eax, %eax       # Check if word is zero
+            je copy_done          # If zero, we're done
+            
+            irmovl $4, %eax       # Increment pointers by 4 bytes
+            addl %eax, %esi
+            addl %eax, %edi
+            
+            loopne copy_loop      # Continue if count > 0 and word != 0
+            
+    copy_done:
+            popl %ebx             # Restore registers
+            popl %edi
+            popl %esi
+            popl %ebp
+            ret
+
+# Main test function
+main:
+            # Test case 1: Sentinel found before max count
+            irmovl dest1, %eax    # Destination array
+            irmovl src1, %ebx     # Source array
+            irmovl $5, %ecx       # Max words to copy
+            call strncpy
+            
+            # Test case 2: Max count reached before sentinel
+            irmovl dest2, %eax    # Destination array
+            irmovl src2, %ebx     # Source array
+            irmovl $3, %ecx       # Max words to copy
+            call strncpy
+            
+            ret
+
+# Test data arrays
+    .align 4
+src1:       .long 1
+            .long 2
+            .long 0              # Sentinel value
+            .long 4
+            .long 5
+            .long 0
+
+dest1:      .long 0
+            .long 0
+            .long 0
+            .long 0
+            .long 0
+            .long 0
+
+src2:       .long 10
+            .long 20
+            .long 30
+            .long 40
+            .long 50
+            .long 0
+
+dest2:      .long 0
+            .long 0
+            .long 0
+            .long 0
+            .long 0
+            .long 0
+
+    .pos 0x100
+Stack:      .long 0 
