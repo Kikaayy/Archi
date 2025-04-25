@@ -1,5 +1,5 @@
-# Test file for incl instruction
-# This program tests the incl instruction by incrementing different registers
+# Test file for incl and decl instructions
+# This program tests both increment and decrement operations
 
 .pos 0
 init:   irmovl Stack, %esp    # Initialize stack pointer
@@ -15,13 +15,25 @@ init:   irmovl Stack, %esp    # Initialize stack pointer
         incl %ecx             # %ecx = 1
         incl %edx             # %edx = 1
 
-        # Increment again to verify it works multiple times
-        incl %eax             # %eax = 2
-        incl %ebx             # %ebx = 2
+        # Test decl on different registers
+        decl %eax             # %eax = 0
+        decl %ebx             # %ebx = 0
+        decl %ecx             # %ecx = 0
+        decl %edx             # %edx = 0
 
         # Test with different initial values
         irmovl $10, %eax      # %eax = 10
         incl %eax             # %eax = 11
+        decl %eax             # %eax = 10
+        incl %eax             # %eax = 11
+        decl %eax             # %eax = 10
+
+        # Test multiple operations
+        incl %ebx             # %ebx = 1
+        incl %ebx             # %ebx = 2
+        decl %ebx             # %ebx = 1
+        decl %ebx             # %ebx = 0
+        decl %ebx             # %ebx = -1
 
         halt
 

@@ -26,7 +26,7 @@ intsig CALL                     'instructionSet.get("call").icode'
 intsig RET                      'instructionSet.get("ret").icode'
 intsig PUSHL                    'instructionSet.get("pushl").icode'
 intsig POPL                     'instructionSet.get("popl").icode'
-intsig INCL                     'instructionSet.get("incl").icode'    # New incl instruction
+intsig INCL                     'instructionSet.get("incl").icode'    # incl/decl instruction
 
 ## Symbolic representation of y86 registers referenced explicitly ##
 
@@ -101,7 +101,7 @@ int srcB = [
 ## What register should be used as the E destination?
 int dstE = [
     icode == RIMOVL : rB;  # Both rrmovl and irmovl write to rB
-    icode in { OPL, IOPL, INCL } : rA;  # INCL writes to rA
+    icode in { OPL, IOPL, INCL } : rA;  # incl/decl write to rA
     icode in { PUSHL, POPL, CALL, RET } : RESP;
     1 : RNONE;  # Don't write any register
 ];
@@ -127,7 +127,8 @@ int aluA = [
 ## Select input B to ALU
 int aluB = [
     icode in { RIMOVL, OPL, IOPL } : valB;
-    icode == INCL : 1;  # INCL adds 1 to the register
+    icode == INCL && ifun == 0 : 1;  # incl adds 1
+    icode == INCL && ifun == 1 : -1; # decl adds -1
     icode in { RMMOVL, MRMOVL, CALL, RET, PUSHL, POPL } : valB;
     # Other instructions don't need ALU
 ];
