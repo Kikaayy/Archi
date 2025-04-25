@@ -1,3 +1,5 @@
 irmovl 3 0 valC,rB => irmovl 2 1 valC,rB
 /0 => incl 13 0 rA
 /0 => loop 14 0 valC (Represents an immediate value to be provided)
+/0 => loope 14 1 valC 
+/0 => loopne 14 2 valC
