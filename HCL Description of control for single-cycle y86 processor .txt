@@ -16,8 +16,7 @@
 
 intsig NOP                      'instructionSet.get("nop").icode'
 intsig HALT                     'instructionSet.get("halt").icode'
-intsig RRMOVL                   'instructionSet.get("rrmovl").icode'
-intsig IRMOVL                   'instructionSet.get("irmovl").icode'
+intsig RIMOVL                   'instructionSet.get("rrmovl").icode'  # Nouveau symbole pour rrmovl et irmovl
 intsig RMMOVL                   'instructionSet.get("rmmovl").icode'
 intsig MRMOVL                   'instructionSet.get("mrmovl").icode'
 intsig OPL                      'instructionSet.get("addl").icode'
@@ -70,22 +69,22 @@ intsig valM                     'ctx.valM'              # Value read from memory
 
 ## Does fetched instruction require a register numbers byte?
 bool need_regids =
-    icode in { RRMOVL, OPL, IOPL, PUSHL, POPL, RMMOVL, MRMOVL };
+    icode in { RIMOVL, OPL, IOPL, PUSHL, POPL, RMMOVL, MRMOVL };
 
 ## Does fetched instruction require a constant word?
 bool need_valC =
-    icode in { RMMOVL, MRMOVL, JXX, CALL, IOPL } || (icode == RRMOVL && ifun == 1);
+    icode in { RMMOVL, MRMOVL, JXX, CALL, IOPL } || (icode == RIMOVL && ifun == 1);
 
 ## Is instruction valid?
 bool instr_valid =
-    icode in { NOP, HALT, RRMOVL, RMMOVL, MRMOVL,
+    icode in { NOP, HALT, RIMOVL, RMMOVL, MRMOVL,
                OPL, IOPL, JXX, CALL, RET, PUSHL, POPL } ;
 
 ## Decode stage ####################################################
 
 ## What register should be used as the A source?
 int srcA = [
-    icode == RRMOVL && ifun == 0 : rA;  # rrmovl
+    icode == RIMOVL && ifun == 0 : rA;  # rrmovl case
     icode in { RMMOVL, OPL, PUSHL } : rA;
     icode in { POPL, RET } : RESP;
     1 : RNONE;  # Don't need register for reading
@@ -100,24 +99,24 @@ int srcB = [
 
 ## What register should be used as the E destination?
 int dstE = [
-    icode == RRMOVL : rB;  # rrmovl <=> irmovl 
+    icode == RIMOVL : rB;  # Both rrmovl and irmovl write to rB
     icode in { OPL, IOPL } : rB;
     icode in { PUSHL, POPL, CALL, RET } : RESP;
-    1 : RNONE;  # Don't need register for writing
+    1 : RNONE;  # Don't write any register
 ];
 
 ## What register should be used as the M destination?
 int dstM = [
     icode in { MRMOVL, POPL } : rA;
-    1 : RNONE;  # Don't need register for writing
+    1 : RNONE;  # Don't write any register
 ];
 
 ## Execute stage ###################################################
 
 ## Select input A to ALU
 int aluA = [
-    icode == RRMOVL && ifun == 1 : valC;  # irmovl
-    icode in { RRMOVL, OPL } : valA;
+    icode == RIMOVL && ifun == 1 : valC;  # irmovl case
+    icode in { RIMOVL, OPL } : valA;
     icode in { IOPL, RMMOVL, MRMOVL } : valC;
     icode in { CALL, PUSHL } : -4;
     icode in { RET, POPL } : 4;
@@ -126,15 +125,16 @@ int aluA = [
 
 ## Select input B to ALU
 int aluB = [
-    icode in { RMMOVL, MRMOVL, OPL, IOPL, CALL, PUSHL, RET, POPL } : valB;
-    icode in { RRMOVL } : 0;
+    icode in { RIMOVL, OPL, IOPL } : valB;
+    icode in { RMMOVL, MRMOVL, CALL, RET, PUSHL, POPL } : valB;
     # Other instructions don't need ALU
 ];
 
-## Set ALU function
+## Set the ALU function
 int alufun = [
-    icode in { OPL, IOPL } : ifun;
-    1 : ALUADD;  # Perform additions by default
+    icode == OPL : ifun;
+    icode in { RIMOVL, IOPL, RMMOVL, MRMOVL, CALL, RET, PUSHL, POPL } : ALUADD;
+    # Other instructions don't need ALU
 ];
 
 ## Should condition codes be updated?

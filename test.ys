@@ -1,18 +1,38 @@
-# Test program for rrmovl and irmovl factorization
-# This program demonstrates both instructions working correctly
+# Test complet pour la factorisation de rrmovl et irmovl
+# Ce programme teste les deux cas d'utilisation de l'instruction RIMOVL
 
     .pos 0
-    irmovl 100, %eax    # Load 100 into %eax
-    irmovl 200, %ebx    # Load 200 into %ebx
-    rrmovl %eax, %ecx    # Copy %eax to %ecx
-    rrmovl %ebx, %edx    # Copy %ebx to %edx
+    # Test 1: Chargement de valeurs immédiates (irmovl - ifun=1)
+    irmovl $100, %eax    # %eax = 100
+    irmovl $200, %ebx    # %ebx = 200
+    irmovl $300, %ecx    # %ecx = 300
     
-    # Add the values to verify they were moved correctly
+    # Test 2: Déplacement entre registres (rrmovl - ifun=0)
+    rrmovl %eax, %edx    # %edx = %eax = 100
+    rrmovl %ebx, %esi    # %esi = %ebx = 200
+    rrmovl %ecx, %edi    # %edi = %ecx = 300
+    
+    # Test 3: Combinaison des deux types
+    # Vérification des valeurs chargées
     addl %eax, %ebx      # %ebx = 100 + 200 = 300
-    addl %ecx, %edx      # %edx = 100 + 200 = 300
+    addl %edx, %esi      # %esi = 100 + 200 = 300
+    addl %ecx, %edi      # %edi = 300 + 300 = 600
     
-    # Store results to verify
-    rmmovl %ebx, 0(%esp) # Store %ebx at stack[0]
-    rmmovl %edx, 4(%esp) # Store %edx at stack[4]
+    # Stockage des résultats pour vérification
+    rmmovl %eax, 0(%esp)  # Stocke 100 à stack[0]
+    rmmovl %ebx, 4(%esp)  # Stocke 300 à stack[4]
+    rmmovl %ecx, 8(%esp)  # Stocke 300 à stack[8]
+    rmmovl %edx, 12(%esp) # Stocke 100 à stack[12]
+    rmmovl %esi, 16(%esp) # Stocke 300 à stack[16]
+    rmmovl %edi, 20(%esp) # Stocke 600 à stack[20]
+    
+    # Test 4: Vérification des résultats
+    # Les valeurs stockées devraient être:
+    # stack[0] = 100 (valeur immédiate chargée)
+    # stack[4] = 300 (somme des valeurs immédiates)
+    # stack[8] = 300 (valeur immédiate)
+    # stack[12] = 100 (valeur déplacée)
+    # stack[16] = 300 (somme des valeurs déplacées)
+    # stack[20] = 600 (somme finale)
     
     halt 
