@@ -27,6 +27,7 @@ intsig RET                      'instructionSet.get("ret").icode'
 intsig PUSHL                    'instructionSet.get("pushl").icode'
 intsig POPL                     'instructionSet.get("popl").icode'
 intsig INCL                     'instructionSet.get("incl").icode'    # incl/decl instruction
+intsig LOOP                     'instructionSet.get("loop").icode'    # New LOOP instruction
 
 ## Symbolic representation of y86 registers referenced explicitly ##
 
@@ -74,12 +75,12 @@ bool need_regids =
 
 ## Does fetched instruction require a constant word?
 bool need_valC =
-    icode in { RMMOVL, MRMOVL, JXX, CALL, IOPL } || (icode == RIMOVL && ifun == 1);
+    icode in { RMMOVL, MRMOVL, JXX, CALL, IOPL, LOOP } || (icode == RIMOVL && ifun == 1);
 
 ## Is instruction valid?
 bool instr_valid =
     icode in { NOP, HALT, RIMOVL, RMMOVL, MRMOVL,
-               OPL, IOPL, JXX, CALL, RET, PUSHL, POPL, INCL } ;
+               OPL, IOPL, JXX, CALL, RET, PUSHL, POPL, INCL, LOOP } ;
 
 ## Decode stage ####################################################
 
@@ -88,6 +89,7 @@ int srcA = [
     icode == RIMOVL && ifun == 0 : rA;  # rrmovl case
     icode in { RMMOVL, OPL, PUSHL, INCL } : rA;
     icode in { POPL, RET } : RESP;
+    icode == LOOP : 1;  # Use %ecx for LOOP instruction
     1 : RNONE;  # Don't need register for reading
 ];
 
@@ -143,7 +145,7 @@ int alufun = [
 ## Should condition codes be updated?
 bool set_cc = icode in { OPL, IOPL, INCL };
 
-bool is_bch = icode in { JXX };
+bool is_bch = icode in { JXX, LOOP };
 
 ## Memory stage ####################################################
 
@@ -179,6 +181,8 @@ int new_pc = [
     icode == CALL : valC;
     # Taken branch:  Use immediate value
     icode == JXX && Bch : valC;
+    # LOOP instruction: Use immediate value if ecx != 0
+    icode == LOOP && valA != 0 : valC;
     # Completion of RET instruction: Use value retrieved from stack
     icode == RET : valM;
     # Default: Use incremented PC

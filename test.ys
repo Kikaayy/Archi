@@ -1,41 +1,10 @@
-# Test file for incl and decl instructions
-# This program tests both increment and decrement operations
-
 .pos 0
-init:   irmovl Stack, %esp    # Initialize stack pointer
-        irmovl Stack, %ebp    # Initialize frame pointer
-        irmovl 0, %eax       # Initialize %eax to 0
-        irmovl 0, %ebx       # Initialize %ebx to 0
-        irmovl 0, %ecx       # Initialize %ecx to 0
-        irmovl 0, %edx       # Initialize %edx to 0
+init:   irmovl $10, %ecx    # Initialize loop counter
+        irmovl $0, %eax     # Initialize result register
+        irmovl $1, %edx     # Initialize increment value
 
-        # Test incl on different registers
-        incl %eax             # %eax = 1
-        incl %ebx             # %ebx = 1
-        incl %ecx             # %ecx = 1
-        incl %edx             # %edx = 1
+loop_start:
+        addl %edx, %eax     # Increment result
+        loop loop_start     # Decrement ecx and loop if not zero
 
-        # Test decl on different registers
-        decl %eax             # %eax = 0
-        decl %ebx             # %ebx = 0
-        decl %ecx             # %ecx = 0
-        decl %edx             # %edx = 0
-
-        # Test with different initial values
-        irmovl $10, %eax      # %eax = 10
-        incl %eax             # %eax = 11
-        decl %eax             # %eax = 10
-        incl %eax             # %eax = 11
-        decl %eax             # %eax = 10
-
-        # Test multiple operations
-        incl %ebx             # %ebx = 1
-        incl %ebx             # %ebx = 2
-        decl %ebx             # %ebx = 1
-        decl %ebx             # %ebx = 0
-        decl %ebx             # %ebx = -1
-
-        halt
-
-.pos 0x100
-Stack:                          # Stack area 
+        halt 
