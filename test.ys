@@ -1,0 +1,18 @@
+# Test program for rrmovl and irmovl factorization
+# This program demonstrates both instructions working correctly
+
+    .pos 0
+    irmovl 100, %eax    # Load 100 into %eax
+    irmovl 200, %ebx    # Load 200 into %ebx
+    rrmovl %eax, %ecx    # Copy %eax to %ecx
+    rrmovl %ebx, %edx    # Copy %ebx to %edx
+    
+    # Add the values to verify they were moved correctly
+    addl %eax, %ebx      # %ebx = 100 + 200 = 300
+    addl %ecx, %edx      # %edx = 100 + 200 = 300
+    
+    # Store results to verify
+    rmmovl %ebx, 0(%esp) # Store %ebx at stack[0]
+    rmmovl %edx, 4(%esp) # Store %edx at stack[4]
+    
+    halt 

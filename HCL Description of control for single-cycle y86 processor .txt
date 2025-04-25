@@ -70,22 +70,23 @@ intsig valM                     'ctx.valM'              # Value read from memory
 
 ## Does fetched instruction require a register numbers byte?
 bool need_regids =
-    icode in { RRMOVL, OPL, IOPL, PUSHL, POPL, IRMOVL, RMMOVL, MRMOVL };
+    icode in { RRMOVL, OPL, IOPL, PUSHL, POPL, RMMOVL, MRMOVL };
 
 ## Does fetched instruction require a constant word?
 bool need_valC =
-    icode in { IRMOVL, RMMOVL, MRMOVL, JXX, CALL, IOPL };
+    icode in { RMMOVL, MRMOVL, JXX, CALL, IOPL } || (icode == RRMOVL && ifun == 1);
 
 ## Is instruction valid?
 bool instr_valid =
-    icode in { NOP, HALT, RRMOVL, IRMOVL, RMMOVL, MRMOVL,
+    icode in { NOP, HALT, RRMOVL, RMMOVL, MRMOVL,
                OPL, IOPL, JXX, CALL, RET, PUSHL, POPL } ;
 
 ## Decode stage ####################################################
 
 ## What register should be used as the A source?
 int srcA = [
-    icode in { RRMOVL, RMMOVL, OPL, PUSHL } : rA;
+    icode == RRMOVL && ifun == 0 : rA;  # rrmovl
+    icode in { RMMOVL, OPL, PUSHL } : rA;
     icode in { POPL, RET } : RESP;
     1 : RNONE;  # Don't need register for reading
 ];
@@ -99,7 +100,8 @@ int srcB = [
 
 ## What register should be used as the E destination?
 int dstE = [
-    icode in { RRMOVL, IRMOVL, OPL, IOPL } : rB;
+    icode == RRMOVL : rB;  # rrmovl <=> irmovl 
+    icode in { OPL, IOPL } : rB;
     icode in { PUSHL, POPL, CALL, RET } : RESP;
     1 : RNONE;  # Don't need register for writing
 ];
@@ -114,8 +116,9 @@ int dstM = [
 
 ## Select input A to ALU
 int aluA = [
+    icode == RRMOVL && ifun == 1 : valC;  # irmovl
     icode in { RRMOVL, OPL } : valA;
-    icode in { IRMOVL, RMMOVL, MRMOVL, IOPL } : valC;
+    icode in { IOPL, RMMOVL, MRMOVL } : valC;
     icode in { CALL, PUSHL } : -4;
     icode in { RET, POPL } : 4;
     # Other instructions don't need ALU
@@ -124,7 +127,7 @@ int aluA = [
 ## Select input B to ALU
 int aluB = [
     icode in { RMMOVL, MRMOVL, OPL, IOPL, CALL, PUSHL, RET, POPL } : valB;
-    icode in { RRMOVL, IRMOVL } : 0;
+    icode in { RRMOVL } : 0;
     # Other instructions don't need ALU
 ];
 
