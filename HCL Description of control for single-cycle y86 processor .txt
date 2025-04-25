@@ -101,7 +101,7 @@ int srcB = [
 ## What register should be used as the E destination?
 int dstE = [
     icode == RIMOVL : rB;  # Both rrmovl and irmovl write to rB
-    icode in { OPL, IOPL, INCL } : rB;
+    icode in { OPL, IOPL, INCL } : rA;  # INCL writes to rA
     icode in { PUSHL, POPL, CALL, RET } : RESP;
     1 : RNONE;  # Don't write any register
 ];
@@ -126,7 +126,8 @@ int aluA = [
 
 ## Select input B to ALU
 int aluB = [
-    icode in { RIMOVL, OPL, IOPL, INCL } : valB;
+    icode in { RIMOVL, OPL, IOPL } : valB;
+    icode == INCL : 1;  # INCL adds 1 to the register
     icode in { RMMOVL, MRMOVL, CALL, RET, PUSHL, POPL } : valB;
     # Other instructions don't need ALU
 ];
