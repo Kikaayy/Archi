@@ -1,10 +1,26 @@
-.pos 0
-init:   irmovl $10, %ecx    # Initialize loop counter
-        irmovl $0, %eax     # Initialize result register
-        irmovl $1, %edx     # Initialize increment value
+    .pos 0
+    init:   irmovl $3, %ecx        # Initialize loop counter
+            irmovl $0, %eax        # Initialize result register
+            irmovl $1, %edx        # Initialize increment value
 
-loop_start:
-        addl %edx, %eax     # Increment result
-        loop loop_start     # Decrement ecx and loop if not zero
+    # Test LOOP instruction (ifun = 0)
+    loop_test:
+            addl %edx, %eax        # Increment result
+            loop loop_test         # Decrement ecx and loop if not zero
 
-        halt 
+    # Test LOOPE instruction (ifun = 1)
+            irmovl $3, %ecx        # Reset counter
+            irmovl $0, %eax        # Reset result
+    loope_test:
+            addl %edx, %eax        # Increment result
+            subl %edx, %eax        # Decrement result (sets Z=1)
+            loope loope_test       # Loop if ecx != 0 and Z=1
+
+    # Test LOOPNE instruction (ifun = 2)
+            irmovl $3, %ecx        # Reset counter
+            irmovl $0, %eax        # Reset result
+    loopne_test:
+            addl %edx, %eax        # Increment result (sets Z=0)
+            loopne loopne_test     # Loop if ecx != 0 and Z=0
+
+            halt 

@@ -186,7 +186,11 @@ int new_pc = [
     # Taken branch:  Use immediate value
     icode == JXX && Bch : valC;
     # LOOP instruction: Use immediate value if ecx != 0
-    icode == LOOP && valE != 0 : valC;
+    icode == LOOP && ifun == 0 && valE != 0 : valC;
+    # LOOPE instruction: Use immediate value if ecx != 0 and Z = 1
+    icode == LOOP && ifun == 1 && valE != 0 && Bch : valC;
+    # LOOPNE instruction: Use immediate value if ecx != 0 and Z = 0
+    icode == LOOP && ifun == 2 && valE != 0 && !Bch : valC;
     # Completion of RET instruction: Use value retrieved from stack
     icode == RET : valM;
     # Default: Use incremented PC
