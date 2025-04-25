@@ -3,9 +3,9 @@
 
     .pos 0
     # Test 1: Chargement de valeurs immédiates (irmovl - ifun=1)
-    irmovl $100, %eax    # %eax = 100
-    irmovl $200, %ebx    # %ebx = 200
-    irmovl $300, %ecx    # %ecx = 300
+    irmovl 100, %eax    # %eax = 100
+    irmovl 200, %ebx    # %ebx = 200
+    irmovl 300, %ecx    # %ecx = 300
     
     # Test 2: Déplacement entre registres (rrmovl - ifun=0)
     rrmovl %eax, %edx    # %edx = %eax = 100
