@@ -26,6 +26,7 @@ intsig CALL                     'instructionSet.get("call").icode'
 intsig RET                      'instructionSet.get("ret").icode'
 intsig PUSHL                    'instructionSet.get("pushl").icode'
 intsig POPL                     'instructionSet.get("popl").icode'
+intsig INCL                     'instructionSet.get("incl").icode'    # New incl instruction
 
 ## Symbolic representation of y86 registers referenced explicitly ##
 
@@ -69,7 +70,7 @@ intsig valM                     'ctx.valM'              # Value read from memory
 
 ## Does fetched instruction require a register numbers byte?
 bool need_regids =
-    icode in { RIMOVL, OPL, IOPL, PUSHL, POPL, RMMOVL, MRMOVL };
+    icode in { RIMOVL, OPL, IOPL, PUSHL, POPL, RMMOVL, MRMOVL, INCL };
 
 ## Does fetched instruction require a constant word?
 bool need_valC =
@@ -78,14 +79,14 @@ bool need_valC =
 ## Is instruction valid?
 bool instr_valid =
     icode in { NOP, HALT, RIMOVL, RMMOVL, MRMOVL,
-               OPL, IOPL, JXX, CALL, RET, PUSHL, POPL } ;
+               OPL, IOPL, JXX, CALL, RET, PUSHL, POPL, INCL } ;
 
 ## Decode stage ####################################################
 
 ## What register should be used as the A source?
 int srcA = [
     icode == RIMOVL && ifun == 0 : rA;  # rrmovl case
-    icode in { RMMOVL, OPL, PUSHL } : rA;
+    icode in { RMMOVL, OPL, PUSHL, INCL } : rA;
     icode in { POPL, RET } : RESP;
     1 : RNONE;  # Don't need register for reading
 ];
@@ -100,7 +101,7 @@ int srcB = [
 ## What register should be used as the E destination?
 int dstE = [
     icode == RIMOVL : rB;  # Both rrmovl and irmovl write to rB
-    icode in { OPL, IOPL } : rB;
+    icode in { OPL, IOPL, INCL } : rB;
     icode in { PUSHL, POPL, CALL, RET } : RESP;
     1 : RNONE;  # Don't write any register
 ];
@@ -116,7 +117,7 @@ int dstM = [
 ## Select input A to ALU
 int aluA = [
     icode == RIMOVL && ifun == 1 : valC;  # irmovl case
-    icode in { RIMOVL, OPL } : valA;
+    icode in { RIMOVL, OPL, INCL } : valA;
     icode in { IOPL, RMMOVL, MRMOVL } : valC;
     icode in { CALL, PUSHL } : -4;
     icode in { RET, POPL } : 4;
@@ -125,7 +126,7 @@ int aluA = [
 
 ## Select input B to ALU
 int aluB = [
-    icode in { RIMOVL, OPL, IOPL } : valB;
+    icode in { RIMOVL, OPL, IOPL, INCL } : valB;
     icode in { RMMOVL, MRMOVL, CALL, RET, PUSHL, POPL } : valB;
     # Other instructions don't need ALU
 ];
@@ -133,12 +134,12 @@ int aluB = [
 ## Set the ALU function
 int alufun = [
     icode == OPL : ifun;
-    icode in { RIMOVL, IOPL, RMMOVL, MRMOVL, CALL, RET, PUSHL, POPL } : ALUADD;
+    icode in { RIMOVL, IOPL, RMMOVL, MRMOVL, CALL, RET, PUSHL, POPL, INCL } : ALUADD;
     # Other instructions don't need ALU
 ];
 
 ## Should condition codes be updated?
-bool set_cc = icode in { OPL, IOPL };
+bool set_cc = icode in { OPL, IOPL, INCL };
 
 bool is_bch = icode in { JXX };
 
